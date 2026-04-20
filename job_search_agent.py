@@ -4,6 +4,7 @@
 Job Search Agent - Daily 2:30 PM PST
 Searches for Sr. Director of Engineering roles in retail tech.
 Sends digest email via Gmail SMTP (App Password).
+Now that app password has been fixed gmail should be recieved everyday.
 Optimized for Tier 1 API: 2 queries, 120s gap, conservative tokens.
 """
 
@@ -28,7 +29,7 @@ LOG_FILE           = os.path.expanduser("~/capstone/logs/job_agent.log")
 
 # 2 queries only — enough coverage, stays under Tier 1 token limits
 SEARCH_QUERIES = [
-    f'"{ROLE}" retail technology hiring 2026',
+    f'"{ROLE}" Retail Engineering hiring 2026',
     f'"VP of Engineering" OR "Sr Director Engineering" retail omnichannel POS jobs 2026',
 ]
 
@@ -116,7 +117,7 @@ def consolidate(client: anthropic.Anthropic, raw_blocks: list) -> str:
 # ── EMAIL ─────────────────────────────────────────────────────────────────────
 def send_via_smtp(subject: str, body: str) -> bool:
     if not GMAIL_APP_PASSWORD:
-        log("⚠️  GMAIL_APP_PASSWORD not set — saving locally only")
+        log("⚠️  GMAIL_APP_PASSWORD not set — saving locally only<--This should not show anymore")
         return False
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
@@ -169,7 +170,7 @@ def main():
 
     # ── 3. Build + send email ─────────────────────────────────────────────────
     today   = datetime.now().strftime("%A, %B %d, %Y")
-    subject = f"🎯 Daily Job Digest: {ROLE} in Retail Tech — {today}"
+    subject = f"🎯 Daily Job Digest: {ROLE} in Retail Engineering — {today}"
     email_body = f"""Hi Sangeeta,
 
 Here is your daily job search digest for {ROLE} in retail technology.
