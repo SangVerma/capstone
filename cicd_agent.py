@@ -139,11 +139,12 @@ if __name__ == "__main__":
     pipeline_app = build_pipeline()
     
     # Thread configuration to track this specific workflow execution state
-    thread_config = {"configurable": {"thread_id": "pr-101-run"}}
+    thread_config = {"configurable": {"thread_id": "pr-1-run"}}
     
     initial_state = {
-        "repo_name": "vermasang/jobBot",
-        "pr_number": 101,
+
+        "repo_name": "SangVerma/capstone",
+        "pr_number": 1,
         "human_approved": False
     }
     
@@ -171,9 +172,14 @@ if __name__ == "__main__":
         print("QA Status:", state.values.get("qa_status"))
         print("="*50)
         
-        # Simulate a human reviewing the terminal output and pressing 'Y'
-        user_input = input("\nApprove this PR for merge to 'vermasang/jobBot'? (y/n): ")
-        is_approved = user_input.strip().lower() == 'y'
+        # Check if we are running in an automated CI environment (like GitHub Actions)
+        if os.environ.get("CI") == "true":
+            print("\n🤖 CI Environment detected. Auto-approving for CI simulation purposes.")
+            is_approved = True
+        else:
+            # Simulate a human reviewing the terminal output and pressing 'Y'
+            user_input = input("\nApprove this PR for merge to 'vermasang/jobBot'? (y/n): ")
+            is_approved = user_input.strip().lower() == 'y'
         
         # Update the state with the human's decision, acting as the human_approval node
         pipeline_app.update_state(

@@ -5,7 +5,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'release_manager/**'  # Triggers only when code in this folder changes
+      - '*.py'  # Triggers when Python files change
       - 'requirements.txt'
 
 jobs:
@@ -23,10 +23,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install langgraph langgraph-checkpoint pytest requests
 
       - name: Run Agent Mock Test
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          # This runs your main.py in mock mode to verify the logic
-          python3 -m release_manager.main --mode mock --pr 42 --inject-failures
+          # This runs your multi-agent pipeline
+          python3 cicd_agent.py
