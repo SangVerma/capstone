@@ -17,10 +17,10 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
-import anthropic
+import google.generativeai as genai
 
 # ── CONFIG ──────────────────────────────────────────────────────────────────
-ANTHROPIC_API_KEY  = os.environ.get("ANTHROPIC_API_KEY", "")
+GEMINI_API_KEY     = os.environ.get("GEMINI_API_KEY", "")
 GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
 GMAIL_SENDER       = "vermasangeeta@gmail.com"
 TARGET_EMAIL       = "vermasangeeta@gmail.com"
@@ -47,6 +47,26 @@ URL: [link or company careers page]
 ---
 If none: NO_MATCHES"""
 
+
+def create_client():
+    if not GEMINI_API_KEY:
+        log("ERROR: GEMINI_API_KEY is not set")
+        sys.exit(1)
+    genai.configure(api_key=GEMINI_API_KEY)
+    return genai
+
+
+def response_text(response):
+    if hasattr(response, "output"):
+        for item in response.output:
+            if getattr(item, "content", None):
+                for chunk in item.content:
+                    if getattr(chunk, "text", None):
+                        return chunk.text
+    if hasattr(response, "output_text"):
+        return response.output_text
+    return str(response)
+
 # ── LOGGING ──────────────────────────────────────────────────────────────────
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
@@ -58,58 +78,61 @@ def log(msg):
         f.write(line + "\n")
 
 # ── SEARCH ────────────────────────────────────────────────────────────────────
-def search_and_filter(client: anthropic.Anthropic, query: str) -> str:
-    """Run one web-search query. On rate limit, wait 2 full minutes and retry up to 2 times."""
+def search_and_filter(client, query: str) -> str:
+    """Run one query with Gemini. Retry on transient errors."""
     for attempt in range(3):
         try:
-            response = client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=600,
-                system=FILTER_SYSTEM,
-                tools=[{"type": "web_search_20260209", "name": "web_search"}],
-                messages=[{
-                    "role": "user",
-                    "content": (
-                        f'Search and extract job matches for:\n"{query}"\n'
-                        f"Today: {datetime.now().strftime('%B %d, %Y')}."
-                    ),
-                }],
+            response = client.responses.create(
+                model="gemini-2.0-flash",
+                temperature=0.0,
+                max_output_tokens=600,
+                messages=[
+                    {"role": "system", "content": FILTER_SYSTEM},
+                    {
+                        "role": "user",
+                        "content": (
+                            f'Search and extract job matches for:\n"{query}"\n'
+                            f"Today: {datetime.now().strftime('%B %d, %Y')}"
+                        ),
+                    },
+                ],
             )
-            return "\n".join(b.text for b in response.content if b.type == "text")
-        except anthropic.RateLimitError:
+            return response_text(response)
+        except Exception as e:
             if attempt < 2:
-                wait = 120  # always wait 2 full minutes — resets the token window
-                log(f"  → Rate limited — waiting {wait}s before retry {attempt + 1}/2...")
+                wait = 120
+                log(f"  → Error, retrying in {wait}s ({attempt + 1}/2): {e}")
                 time.sleep(wait)
             else:
-                log("  → Rate limited — skipping this query after 2 retries")
+                log(f"  → Failed after retries: {e}")
                 return ""
-        except Exception as e:
-            log(f"  → ERROR: {e}")
-            return ""
     return ""
 
 
-def consolidate(client: anthropic.Anthropic, raw_blocks: list) -> str:
-    """Deduplicate and rank results using Haiku (cheap, fast)."""
+def consolidate(client, raw_blocks: list) -> str:
+    """Deduplicate and rank results using Gemini."""
     combined = "\n\n===\n\n".join(raw_blocks)
     try:
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=800,
-            messages=[{
-                "role": "user",
-                "content": (
-                    f"Job results for '{ROLE}' in retail tech:\n\n{combined}\n\n"
-                    "1. Remove duplicates\n"
-                    "2. Rank by FIT_SCORE descending\n"
-                    "3. Keep same format (COMPANY/TITLE/LOCATION/FIT_SCORE/HIGHLIGHTS/URL/---)\n"
-                    "4. Add one sentence: MARKET_SUMMARY\n"
-                    "List all if fewer than 10."
-                ),
-            }],
+        response = client.responses.create(
+            model="gemini-2.0-flash",
+            temperature=0.0,
+            max_output_tokens=800,
+            messages=[
+                {"role": "system", "content": "You are a recruiter assistant."},
+                {
+                    "role": "user",
+                    "content": (
+                        f"Job results for '{ROLE}' in retail tech:\n\n{combined}\n\n"
+                        "1. Remove duplicates\n"
+                        "2. Rank by FIT_SCORE descending\n"
+                        "3. Keep same format (COMPANY/TITLE/LOCATION/FIT_SCORE/HIGHLIGHTS/URL/---)\n"
+                        "4. Add one sentence: MARKET_SUMMARY\n"
+                        "List all if fewer than 10."
+                    ),
+                },
+            ],
         )
-        return "\n".join(b.text for b in response.content if b.type == "text")
+        return response_text(response)
     except Exception as e:
         log(f"Consolidation error: {e}")
         return combined
@@ -138,11 +161,7 @@ def main():
     log(f"Recipient: {TARGET_EMAIL}")
     log(f"Queries: {len(SEARCH_QUERIES)}")
 
-    if not ANTHROPIC_API_KEY:
-        log("ERROR: ANTHROPIC_API_KEY is not set")
-        sys.exit(1)
-
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    client = create_client()
 
     # ── 1. Search queries ─────────────────────────────────────────────────────
     raw_results = []

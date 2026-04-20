@@ -1,4 +1,4 @@
-Subject: 🎯 Daily Job Digest: Senior Director of Engineering in Retail Tech — Sunday, April 19, 2026
+Subject: 🎯 Daily Job Digest: Senior Director of Engineering in Retail Engineering — Sunday, April 19, 2026
 
 Hi Sangeeta,
 
@@ -7,7 +7,49 @@ Generated: Sunday, April 19, 2026
 
 =======================================================
 
-No matching jobs found today. Will retry tomorrow.
+# 🎯 JOB MATCH RESULTS — Senior Director of Engineering | Retail Tech
+**Cleaned & Ranked by Fit Score**
+
+---
+
+**MATCH 1 — 🔥 TOP PICK**
+
+COMPANY: **Nordstrom**
+TITLE: **Sr. Director, Engineering – Store Commerce & Restaurant Technology**
+LOCATION: **Seattle, WA (Hybrid)**
+POSTED: **April 8, 2026 ✅ CONFIRMED ACTIVE**
+SALARY: **$221,000 – $365,000**
+FIT_SCORE: **10/10**
+
+HIGHLIGHTS:
+
+As Senior Director of Engineering for Store Commerce & Restaurant Technology, you will lead the vision, delivery, and evolution of the core in-store technologies at the heart of the Nordstrom experience — including **Point of Sale platforms** across Nordstrom Full Line and Nordstrom Rack, restaurant technology, and store hardware infrastructure.
+
+- **Champion unified commerce** as a strategic direction, working across POS, order management, inventory, and customer identity to move toward a shared platform and seamless cross-channel customer journey.
+
+- **Own architectural decisions** for store commerce systems, balancing short-term operational stability with long-term modernization; manage third-party software providers and hardware vendors including contract negotiation and integration oversight.
+
+- **Drive AI transformation** across the engineering organization — both in how teams build software (AI-assisted development, code generation, automated testing) and in creating new business capabilities.
+
+URL: https://nordstrom.wd501.myworkdayjobs.com/nordstrom_careers/job/Seattle-WA/Sr-Director--Engineering---Store-Commerce---Restaurant-Technology_R-827692
+
+MARKET_SUMMARY: Premium retail continues to invest heavily in omnichannel commerce infrastructure and AI-driven modernization, creating strong demand for experienced engineering leaders.
+
+---
+
+**MATCH 2**
+
+COMPANY: **Jabil**
+TITLE: **Senior Director, Engineering & Technology – Digital Commerce**
+LOCATION: **Remote, USA**
+POSTED: **Active (no close date listed) ✅**
+FIT_SCORE: **8/10**
+
+HIGHLIGHTS: *[Information incomplete in source data]*
+
+URL: *[URL not provided]*
+
+MARKET_SUMMARY: *[Awaiting full job details]*
 
 =======================================================
 

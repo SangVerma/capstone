@@ -23,7 +23,7 @@ mkdir -p ~/capstone/logs
 
 Copy `job_search_agent.py` to your Mac at this path:
 ```
-~/roughpad/jobBot/job_search_agent.py
+~/capstone/job_search_agent.py
 ```
 
 You can drag it from Downloads into that folder using Finder,
@@ -34,24 +34,23 @@ cp ~/Downloads/job_search_agent.py ~/capstone/
 
 ---
 
-## Step 3 — Add your Anthropic API key
+## Step 3 — Add your Gemini API key
 
 Open the script in TextEdit or VS Code:
 ```bash
-open -e ~/roughpad/jobBot/job_search_agent.py
 open -e ~/capstone/job_search_agent.py
 ```
 
 Find this line near the top:
 ```python
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "YOUR_API_KEY_HERE")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "YOUR_API_KEY_HERE")
 ```
 
 Either:
 - Replace `YOUR_API_KEY_HERE` with your actual key (simpler), OR
 - Keep it and set it in the plist file (more secure — see Step 5)
 
-Get your key at: https://console.anthropic.com → API Keys
+Get your key at: https://aistudio.google.com/app/apikey
 
 ---
 
@@ -59,17 +58,17 @@ Get your key at: https://console.anthropic.com → API Keys
 
 In Terminal:
 ```bash
-cd ~/roughpad/jobBot
-ANTHROPIC_API_KEY="sk-ant-YOUR-KEY-HERE" python3 job_search_agent.py
+cd ~/capstone
+GEMINI_API_KEY="YOUR_KEY_HERE" python3 job_search_agent.py
 ```
 
 Watch the output. It should:
-1. Print search progress for 8 queries (takes 3-5 minutes)
+1. Print search progress for 2 queries (takes 3-5 minutes)
 2. Consolidate results
 3. Send email to vermasangeeta@gmail.com
 4. Print "Job Search Agent complete"
 
-Check ~/roughpad/jobBot/logs/job_agent.log if anything looks wrong.
+Check ~/capstone/logs/job_agent.log if anything looks wrong.
 
 ---
 
@@ -82,12 +81,12 @@ Open `com.sangeeta.jobagent.plist` in TextEdit:
 Replace BOTH occurrences of `YOUR_MAC_USERNAME` with your actual Mac username.
 (Find it by running `whoami` in Terminal)
 
-Replace `YOUR_API_KEY_HERE` with your Anthropic API key.
+Replace `YOUR_API_KEY_HERE` with your Gemini API key.
 
 ### 5b. Copy plist to the right location
 
 ```bash
-cp ~/Downloads/com.sangeeta.jobagent.plist ~/Library/LaunchAgents/
+cp ~/capstone/com.sangeeta.jobagent.plist ~/Library/LaunchAgents/
 ```
 
 ### 5c. Load it into launchd
@@ -106,7 +105,7 @@ You should see a line with `com.sangeeta.jobagent` — that means it's scheduled
 
 ---
 
-## Step 6 — Verify timezone (important for 9 AM PST)
+## Step 6 — Verify timezone (important for 2:30 PM PST)
 
 launchd uses your Mac's system clock. Make sure your Mac is set to Pacific time:
 System Settings → General → Date & Time → Time Zone → America/Los_Angeles
@@ -121,8 +120,8 @@ System Settings → General → Date & Time → Time Zone → America/Los_Angele
 | Run it manually RIGHT NOW | `launchctl start com.sangeeta.jobagent` |
 | Pause/disable it | `launchctl unload ~/Library/LaunchAgents/com.sangeeta.jobagent.plist` |
 | Re-enable it | `launchctl load ~/Library/LaunchAgents/com.sangeeta.jobagent.plist` |
-| See today's log | `cat ~/roughpad/jobBot/logs/job_agent.log` |
-| Watch live output | `tail -f ~/roughpad/jobBot/logs/job_agent_stdout.log` |
+| See today's log | `cat ~/capstone/logs/job_agent.log` |
+| Watch live output | `tail -f ~/capstone/logs/job_agent_stdout.log` |
 
 ---
 
@@ -130,19 +129,18 @@ System Settings → General → Date & Time → Time Zone → America/Los_Angele
 
 **"Permission denied" when running the script**
 ```bash
-chmod +x ~/roughpad/jobBot/job_search_agent.py
+chmod +x ~/capstone/job_search_agent.py
 ```
 
 **Script runs but no email arrives**
-- Check ~/roughpad/jobBot/logs/ for a digest_YYYYMMDD.txt fallback file
-- Make sure Gmail MCP is connected in your Claude.ai settings
-- The Gmail MCP requires the script to use your Claude.ai session token — 
-  if it fails, the digest is saved locally and you can copy-paste it into an email
+- Check ~/capstone/logs/ for a digest_YYYYMMDD.txt fallback file
+- Make sure your Gmail app password is correct
+- The script uses Gmail SMTP directly; if it fails, the digest is saved locally
 
 **API key errors**
-- Double-check the key starts with `sk-ant-`
+- Double-check the key from Google AI Studio
 - Make sure there are no spaces around it
-- Verify it has credits at console.anthropic.com
+- Verify it has credits/quota at aistudio.google.com
 
 **"launchctl: service not found"**
 - Make sure the plist file is in ~/Library/LaunchAgents/ (not ~/LaunchAgents/)
