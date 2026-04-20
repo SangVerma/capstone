@@ -17,7 +17,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 # ── CONFIG ──────────────────────────────────────────────────────────────────
 GEMINI_API_KEY     = os.environ.get("GEMINI_API_KEY", "")
@@ -52,20 +53,11 @@ def create_client():
     if not GEMINI_API_KEY:
         log("ERROR: GEMINI_API_KEY is not set")
         sys.exit(1)
-    genai.configure(api_key=GEMINI_API_KEY)
-    return genai
+    return genai.Client(api_key=GEMINI_API_KEY)
 
 
 def response_text(response):
-    if hasattr(response, "output"):
-        for item in response.output:
-            if getattr(item, "content", None):
-                for chunk in item.content:
-                    if getattr(chunk, "text", None):
-                        return chunk.text
-    if hasattr(response, "output_text"):
-        return response.output_text
-    return str(response)
+    return response.text if response.text else ""
 
 # ── LOGGING ──────────────────────────────────────────────────────────────────
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
@@ -82,20 +74,14 @@ def search_and_filter(client, query: str) -> str:
     """Run one query with Gemini. Retry on transient errors."""
     for attempt in range(3):
         try:
-            response = client.responses.create(
+            response = client.models.generate_content(
                 model="gemini-2.0-flash",
-                temperature=0.0,
-                max_output_tokens=600,
-                messages=[
-                    {"role": "system", "content": FILTER_SYSTEM},
-                    {
-                        "role": "user",
-                        "content": (
-                            f'Search and extract job matches for:\n"{query}"\n'
-                            f"Today: {datetime.now().strftime('%B %d, %Y')}"
-                        ),
-                    },
-                ],
+                contents=f'Search and extract job matches for:\n"{query}"\nToday: {datetime.now().strftime("%B %d, %Y")}',
+                config=types.GenerateContentConfig(
+                    system_instruction=FILTER_SYSTEM,
+                    temperature=0.0,
+                    max_output_tokens=600,
+                ),
             )
             return response_text(response)
         except Exception as e:
@@ -113,24 +99,21 @@ def consolidate(client, raw_blocks: list) -> str:
     """Deduplicate and rank results using Gemini."""
     combined = "\n\n===\n\n".join(raw_blocks)
     try:
-        response = client.responses.create(
+        response = client.models.generate_content(
             model="gemini-2.0-flash",
-            temperature=0.0,
-            max_output_tokens=800,
-            messages=[
-                {"role": "system", "content": "You are a recruiter assistant."},
-                {
-                    "role": "user",
-                    "content": (
-                        f"Job results for '{ROLE}' in retail tech:\n\n{combined}\n\n"
-                        "1. Remove duplicates\n"
-                        "2. Rank by FIT_SCORE descending\n"
-                        "3. Keep same format (COMPANY/TITLE/LOCATION/FIT_SCORE/HIGHLIGHTS/URL/---)\n"
-                        "4. Add one sentence: MARKET_SUMMARY\n"
-                        "List all if fewer than 10."
-                    ),
-                },
-            ],
+            contents=(
+                f"Job results for '{ROLE}' in retail tech:\n\n{combined}\n\n"
+                "1. Remove duplicates\n"
+                "2. Rank by FIT_SCORE descending\n"
+                "3. Keep same format (COMPANY/TITLE/LOCATION/FIT_SCORE/HIGHLIGHTS/URL/---)\n"
+                "4. Add one sentence: MARKET_SUMMARY\n"
+                "List all if fewer than 10."
+            ),
+            config=types.GenerateContentConfig(
+                system_instruction="You are a recruiter assistant.",
+                temperature=0.0,
+                max_output_tokens=800,
+            ),
         )
         return response_text(response)
     except Exception as e:
