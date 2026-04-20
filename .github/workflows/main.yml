@@ -3,14 +3,21 @@ name: Capstone Agents Pipeline
 on:
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: 'Repository name'
+        default: 'SangVerma/capstone'
+      pr:
+        description: 'Pull request number'
+        default: '101'
   schedule:
     # Daily at 2:30 PM PST (which is 21:30 UTC)
     - cron: '30 21 * * *'
-  workflow_dispatch:  # Allow manual runs
 
 jobs:
   cicd_agent:
-    if: github.event_name == 'pull_request'
+    if: contains(['pull_request', 'workflow_dispatch'], github.event_name)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +36,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python3 cicd_agent.py --repo ${{ github.repository }} --pr ${{ github.event.pull_request.number }}
+          python3 cicd_agent.py --repo ${{ github.event_name == 'pull_request' && github.repository || github.event.inputs.repo }} --pr ${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.event.inputs.pr }}
 
   job_search_agent:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
