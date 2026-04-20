@@ -8,12 +8,14 @@ In high-velocity engineering environments—particularly in retail and e-commerc
 •	Orchestrate complex deployments across multi-region store environments autonomously.
 
 **Key Benefits of the Agentic Approach**
+
 Applying AI Agents to this domain provides **three** transformative benefits:
 **Reduction in Deployment Lead Time**: By automating the "Review-Fix-Verify" cycle, the agent reduces the time a PR sits in queue by up to 60%, allowing teams to ship updates to stores and web platforms faster.
 **Enhanced Reliability & Safety**: Unlike standard scripts, the agent uses LLM-based reasoning to detect security vulnerabilities or architectural inconsistencies that traditional unit tests might miss.
 **Operational Scalability**: As engineering teams grow, the **"tax"** of manual release management increases. This agent allows a single Release Engineer to oversee a significantly higher volume of deployments by acting as an "intelligent force multiplier."
 
 **Technical Architecture & Implementation**
+
 This project utilizes a Multi-Agent Orchestration pattern built with LangGraph and the Gemini 2.0 Flash API.
 •	**The Orchestrator Agent**: Manages the overall state of the release and maintains memory of past build failures to prevent recurring issues.
 •	**The Security Auditor Agent**: Utilizes the Model Context Protocol (MCP) to fetch the latest security benchmarks and scan the codebase for compliance.
@@ -21,6 +23,7 @@ This project utilizes a Multi-Agent Orchestration pattern built with LangGraph a
 •	**Human-in-the-Loop (HITL)**: A critical safety feature where the agent presents a summarized "Release Readiness Report" for final executive sign-off before production pushes.
 
 **Course Concepts Applied**
+
 •	**Stateful Agentic Workflows**: Using LangGraph to manage complex, non-linear release states.
 •	**Tool Use & Function Calling**: Integrating with GitHub APIs and CI/CD tools to perform real-world actions(used VSCode with Gemini extensions
 •	**Multi-Agent Collaboration**: Demonstrating delegation of tasks between specialized reviewer and orchestrator agents.
