@@ -17,7 +17,7 @@ on:
 
 jobs:
   cicd_agent:
-    if: contains(['pull_request', 'workflow_dispatch'], github.event_name)
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
