@@ -57,15 +57,7 @@ def create_client():
 
 
 def response_text(response):
-    if hasattr(response, "output"):
-        for item in response.output:
-            if getattr(item, "content", None):
-                for chunk in item.content:
-                    if getattr(chunk, "text", None):
-                        return chunk.text
-    if hasattr(response, "output_text"):
-        return response.output_text
-    return str(response)
+    return response.text
 
 # ── LOGGING ──────────────────────────────────────────────────────────────────
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
@@ -80,22 +72,11 @@ def log(msg):
 # ── SEARCH ────────────────────────────────────────────────────────────────────
 def search_and_filter(client, query: str) -> str:
     """Run one query with Gemini. Retry on transient errors."""
+    model = client.GenerativeModel('gemini-2.0-flash')
     for attempt in range(3):
         try:
-            response = client.responses.create(
-                model="gemini-2.0-flash",
-                temperature=0.0,
-                max_output_tokens=600,
-                messages=[
-                    {"role": "system", "content": FILTER_SYSTEM},
-                    {
-                        "role": "user",
-                        "content": (
-                            f'Search and extract job matches for:\n"{query}"\n'
-                            f"Today: {datetime.now().strftime('%B %d, %Y')}"
-                        ),
-                    },
-                ],
+            response = model.generate_content(
+                f"{FILTER_SYSTEM}\n\nSearch and extract job matches for:\n\"{query}\"\nToday: {datetime.now().strftime('%B %d, %Y')}"
             )
             return response_text(response)
         except Exception as e:
@@ -111,26 +92,11 @@ def search_and_filter(client, query: str) -> str:
 
 def consolidate(client, raw_blocks: list) -> str:
     """Deduplicate and rank results using Gemini."""
+    model = client.GenerativeModel('gemini-2.0-flash')
     combined = "\n\n===\n\n".join(raw_blocks)
     try:
-        response = client.responses.create(
-            model="gemini-2.0-flash",
-            temperature=0.0,
-            max_output_tokens=800,
-            messages=[
-                {"role": "system", "content": "You are a recruiter assistant."},
-                {
-                    "role": "user",
-                    "content": (
-                        f"Job results for '{ROLE}' in retail tech:\n\n{combined}\n\n"
-                        "1. Remove duplicates\n"
-                        "2. Rank by FIT_SCORE descending\n"
-                        "3. Keep same format (COMPANY/TITLE/LOCATION/FIT_SCORE/HIGHLIGHTS/URL/---)\n"
-                        "4. Add one sentence: MARKET_SUMMARY\n"
-                        "List all if fewer than 10."
-                    ),
-                },
-            ],
+        response = model.generate_content(
+            f"You are a recruiter assistant.\n\nJob results for '{ROLE}' in retail tech:\n\n{combined}\n\n1. Remove duplicates\n2. Rank by FIT_SCORE descending\n3. Keep same format (COMPANY/TITLE/LOCATION/FIT_SCORE/HIGHLIGHTS/URL/---)\n4. Add one sentence: MARKET_SUMMARY\nList all if fewer than 10."
         )
         return response_text(response)
     except Exception as e:
